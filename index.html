@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Bot - DOGMEN</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #25d366;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .phone-input, .code-input {
+            font-size: 1.2rem;
+            text-align: center;
+            padding: 1rem;
+            border: 2px solid #25d366;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            width: 100%;
+        }
+
+        .pair-btn {
+            background: #25d366;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .pair-btn:hover {
+            background: #128c7e;
+        }
+
+        .notification {
+            background: #ffeb3b;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            border-left: 4px solid #ff9800;
+        }
+
+        .chat-interface {
+            display: none;
+            text-align: left;
+        }
+
+        .messages {
+            height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            overflow-y: auto;
+            background: #f5f5f5;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 0.8rem;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+
+        .message.user {
+            background: #dcf8c6;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.bot {
+            background: white;
+            border: 1px solid #ddd;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+        }
+
+        .send-btn {
+            background: #25d366;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        .commands {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Step 1: Phone Number -->
+        <div id="step1" class="step active">
+            <div class="logo">📱</div>
+            <h1>Link Your WhatsApp</h1>
+            <p class="subtitle">Enter your phone number to receive pairing code</p>
+            
+            <input type="tel" class="phone-input" id="phoneNumber" placeholder="+1234567890">
+            <button class="pair-btn" onclick="sendCode()">Send Code</button>
+        </div>
+
+        <!-- Step 2: Code Verification -->
+        <div id="step2" class="step">
+            <div class="logo">🔐</div>
+            <h1>Enter Pairing Code</h1>
+            <p class="subtitle">Check WhatsApp for pairing notification</p>
+            
+            <div class="notification">
+                📲 <strong>WhatsApp Notification:</strong><br>
+                "Are you trying to link a device? Use code: <strong id="generatedCode">DOGMEN</strong>"
+            </div>
+            
+            <input type="text" class="code-input" id="pairingCode" placeholder="Enter code from WhatsApp" maxlength="6">
+            <button class="pair-btn" onclick="verifyCode()">Verify & Connect</button>
+        </div>
+
+        <!-- Step 3: Chat Interface -->
+        <div id="step3" class="step chat-interface">
+            <div class="logo">🤖</div>
+            <h1>WhatsApp Bot Connected</h1>
+            
+            <div class="messages" id="messages">
+                <div class="message bot">
+                    ✅ WhatsApp linked successfully!
+                </div>
+                <div class="message bot">
+                    Type commands starting with . (dot)
+                </div>
+            </div>
+
+            <div class="input-area">
+                <input type="text" class="message-input" id="messageInput" placeholder=".movie avengers" onkeypress="handleKeyPress(event)">
+                <button class="send-btn" onclick="sendMessage()">Send</button>
+            </div>
+
+            <div class="commands">
+                <div><strong>Commands:</strong></div>
+                <div>.movie &lt;query&gt; - Search movies</div>
+                <div>.yt &lt;query&gt; - Search YouTube</div>
+                <div>.gg &lt;query&gt; - Search Google</div>
+                <div>.tt &lt;query&gt; - Search TikTok</div>
+                <div>.ping - Bot status</div>
+                <div>.menu - Show commands</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showStep(stepNumber) {
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
+            document.getElementById('step' + stepNumber).classList.add('active');
+        }
+
+        function sendCode() {
+            const phone = document.getElementById('phoneNumber').value.trim();
+            if (!phone) {
+                alert('Please enter your phone number');
+                return;
+            }
+            
+            showStep(2);
+        }
+
+        function verifyCode() {
+            const enteredCode = document.getElementById('pairingCode').value.toUpperCase();
+            
+            if (enteredCode === 'DOGMEN') {
+                showStep(3);
+                setTimeout(() => {
+                    addMessage('bot', '🤖 Bot is ready! Try these commands:\n.movie avengers\n.yt funny cats\n.gg weather\n.tt dance\n.ping\n.menu');
+                }, 1000);
+            } else {
+                alert('Invalid code! Please check WhatsApp notification and try again.');
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            addMessage('user', message);
+            
+            if (message.startsWith('.')) {
+                const response = processCommand(message);
+                setTimeout(() => {
+                    addMessage('bot', response);
+                }, 1000);
+            } else {
+                setTimeout(() => {
+                    addMessage('bot', 'Type commands starting with . (dot)\nTry .menu for all commands');
+                }, 1000);
+            }
+            
+            input.value = '';
+        }
+
+        function processCommand(command) {
+            const parts = command.slice(1).split(' ');
+            const cmd = parts[0].toLowerCase();
+            const query = parts.slice(1).join(' ');
+
+            switch(cmd) {
+                case 'movie':
+                    if (!query) return '🎬 Usage: .movie <query>\nExample: .movie avengers';
+                    return `🎬 Searching: "${query}"\n🔗 https://www.themoviedb.org/search?query=${encodeURIComponent(query)}`;
+                
+                case 'yt':
+                    if (!query) return '📺 Usage: .yt <query>\nExample: .yt funny cats';
+                    return `📺 YouTube: "${query}"\n🔗 https://youtube.com/results?search_query=${encodeURIComponent(query)}`;
+                
+                case 'gg':
+                    if (!query) return '🔍 Usage: .gg <query>\nExample: .gg weather';
+                    return `🔍 Google: "${query}"\n🔗 https://google.com/search?q=${encodeURIComponent(query)}`;
+                
+                case 'tt':
+                    if (!query) return '📱 Usage: .tt <query>\nExample: .tt dance';
+                    return `📱 TikTok: "${query}"\n🔗 https://tiktok.com/search?q=${encodeURIComponent(query)}`;
+                
+                case 'ping':
+                    return `🏓 Bot is active!\n\n📢 My Channel:\nhttps://whatsapp.com/channel/0029Vb71mgIElaglZCU0je0x`;
+                
+                case 'menu':
+                    return `🤖 BOT COMMANDS:\n\n🎬 .movie <query> - Search films\n📺 .yt <query> - YouTube search\n🔍 .gg <query> - Google search\n📱 .tt <query> - TikTok search\n🏓 .ping - Bot status\n📖 .menu - Show commands`;
+                
+                default:
+                    return '❌ Unknown command. Type .menu for available commands.';
+            }
+        }
+
+        function addMessage(type, text) {
+            const messages = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = text.replace(/\n/g, '<br>');
+            messages.appendChild(messageDiv);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        // Auto-focus on phone input
+        document.getElementById('phoneNumber').focus();
+    </script>
+</body>
+  </html>
